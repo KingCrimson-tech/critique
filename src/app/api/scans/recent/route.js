@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { listRecentScans } from "@/lib/scans";
+import { listRecentScansForViewer, getViewer } from "@/lib/scans";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  return NextResponse.json({ scans: listRecentScans(20) });
+export async function GET(request) {
+  const viewer = await getViewer(request);
+  return NextResponse.json({ scans: await listRecentScansForViewer(viewer) });
 }

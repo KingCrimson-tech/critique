@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createShareLink } from "@/lib/scans";
+import { createShareLink, getViewer } from "@/lib/scans";
 
 export const runtime = "nodejs";
 
@@ -10,7 +10,8 @@ export async function POST(request) {
   } catch {
     /* handled below */
   }
-  const result = createShareLink(body?.scanId);
-  if (!result) return NextResponse.json({ error: "No such scan." }, { status: 404 });
+  const viewer = await getViewer(request);
+  const result = await createShareLink(body?.scanId, viewer);
+  if (result.error) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ slug: result.slug });
 }

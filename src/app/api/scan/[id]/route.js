@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getScan } from "@/lib/scans";
+import { getScanForViewer, getViewer } from "@/lib/scans";
 
 export const runtime = "nodejs";
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   const { id } = await params;
-  const scan = getScan(id);
-  if (!scan) return NextResponse.json({ error: "No such scan." }, { status: 404 });
+  const viewer = await getViewer(request);
+  const { scan, allowed } = await getScanForViewer(id, viewer);
+  // 404, not 403 — existence is not information we hand out.
+  if (!scan || !allowed) return NextResponse.json({ error: "No such scan." }, { status: 404 });
   return NextResponse.json(scan);
 }

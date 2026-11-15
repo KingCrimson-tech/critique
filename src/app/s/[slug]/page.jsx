@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const scan = resolveShareLink(slug);
+  const scan = await resolveShareLink(slug);
   if (!scan) return { title: "No such report" };
   const host = new URL(scan.url).host;
   return {
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }) {
 
 export default async function SharePage({ params }) {
   const { slug } = await params;
-  const scan = resolveShareLink(slug);
+  const scan = await resolveShareLink(slug);
   if (!scan) notFound();
   return <ReportView scan={scan} shared />;
 }

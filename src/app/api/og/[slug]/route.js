@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 // 1200×630 share card: score numeral, verdict, target host. Ink on paper.
 export async function GET(_request, { params }) {
   const { slug } = await params;
-  const scan = resolveShareLink(slug);
+  const scan = await resolveShareLink(slug);
   if (!scan) return new Response("Not found", { status: 404 });
 
   const host = new URL(scan.url).host;

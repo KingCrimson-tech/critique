@@ -1,4 +1,4 @@
-import { SEVERITY_RANK, PENALTY } from "@/lib/checks/util";
+import { PENALTY } from "@/lib/score";
 
 const SEV_CLASS = {
   critical: "border-vermillion text-vermillion",
@@ -21,5 +21,3 @@ export function SeverityTag({ severity }) {
 export function penaltyOf(finding) {
   return PENALTY[finding.severity] ?? 0;
 }
-
-export { SEVERITY_RANK };

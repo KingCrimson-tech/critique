@@ -172,9 +172,57 @@ with and without lab data. Known constraint of the Phase 3 stopgap: scan and sha
 state are process-local, so a server restart clears old ids — persistence is exactly
 what Phase 5 replaces with the database.
 
+## Phase 5 — Accounts, persistence, history
+
+Scans stop evaporating and every visitor gets a paper trail — signed in or not.
+
+**Durable persistence.** The Phase 3 in-process stopgap is gone. Postgres runs locally
+(Docker), Prisma owns the schema and migrations, and scans, sites, users, sessions, and
+share links live in the database. The data model is the Phase 1 sketch made real:
+findings, scores, crawled pages, PSI output, and the re-scan diff are all JSONB on the
+scan row, with indexes on the anonymous token and `(siteId, createdAt)` for history
+queries. Share slugs are unique rows that cascade with their scan — deleting a scan
+deletes its public link, not leaves a dangling one.
+
+**Accounts without friction.** Better Auth (Prisma adapter) with magic-link sign-in:
+paste your email, get a link, click it, done. There is no email service in this build by
+design — the link is printed to the server console and the UI says exactly that instead
+of pretending a message was sent. Google sign-in is wired and only renders when
+credentials exist in the environment; otherwise the button doesn't exist. Email +
+password is deliberately off — this product has no tiers and no reason to hold
+passwords. Sign-out clears the session; the auth handler mounts under
+`/api/auth/[...all]`, and non-browser requests without an Origin header are rejected
+(missing-Origin 403), matching Better Auth's CSRF posture.
+
+**Anonymous scans with claim-on-signup.** A scan run without an account works exactly
+as before, but now it's stamped with a signed anonymous cookie (`critique_anon` — a
+random token plus an HMAC of it, so tokens can't be forged by guessing). When that
+browser signs in, the dashboard claims every anonymous scan the cookie produced: each
+site gets a `Site` record and the scans attach to it, idempotently. The dashboard says
+"claimed N scans from this browser" when it happens.
+
+**Ownership rules.** A scan is viewable by its owner (via session), by the anonymous
+cookie that created it, or by anyone holding a share link — nobody else, and
+unauthorized reads return 404, not 403, so scan IDs aren't an oracle for existence.
+Sharing enforces the same rule server-side; creating a share link for someone else's
+scan is a 403. Share links are one-per-scan (creating twice returns the same slug).
+
+**Your sites + history.** `/sites` lists each site's latest score, critical count, and
+last-scan date, with a one-click re-scan. `/sites/[id]` is the site's full scan history:
+score, delta vs the previous run, and the finding counts per run. Reports show a delta
+strip on re-scans — overall movement, the five biggest category movers, and how many
+findings were fixed vs newly introduced — computed from the previous completed scan of
+the same site at scan time and stored on the row, so old diffs never shift.
+
+**Verified:** lint and build clean; full anonymous round trip (scan → cookie set →
+owner sees report, stranger 404); magic-link sign-in end to end (link printed to the
+console, verify → session → redirect); claim-on-signup verified in the database
+(scan's `siteId` set, anonymous token cleared, "claimed 1 scan" shown); re-scan
+produces a stored diff (+9 overall, 6 fixed / 2 new in the live test) rendered by the
+report; share flow verified under the database (slug → public page → OG PNG, stranger
+share 403); recent-scans endpoint only returns scans the viewer may see.
+
 ## Coming next
 
-- **Phase 5** — Better Auth, anonymous scan claiming, site history and deltas, durable
-  persistence for scans and share links.
 - **Phase 6** — the "Ask the AIs" panel, empty/error/rate-limit states, accessibility
   pass, rubric page, deploy.

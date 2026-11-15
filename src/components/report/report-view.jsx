@@ -6,6 +6,7 @@ import { ScoreHeader, CategoryRail, StackPanel, TopCosts } from "./overview";
 import { FindingsTable } from "./findings-table";
 import { LabPanel } from "./lab-panel";
 import { ShareMenu } from "./share-menu";
+import { DiffStrip } from "./diff-strip";
 
 function PagesTab({ scan }) {
   return (
@@ -77,6 +78,8 @@ export function ReportView({ scan, shared = false }) {
         <ScoreHeader scan={scan} className="flex-1" />
         <ShareMenu scanId={scan.id} host={new URL(scan.url).host} />
       </div>
+
+      <DiffStrip diff={scan.diff} />
 
       <Tabs defaultValue="overview" className="mt-8">
         <TabsList aria-label="Report sections" className="no-print">

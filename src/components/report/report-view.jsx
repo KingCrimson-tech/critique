@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScoreHeader, CategoryRail, StackPanel, TopCosts } from "./overview";
 import { FindingsTable } from "./findings-table";
 import { LabPanel } from "./lab-panel";
 import { ShareMenu } from "./share-menu";
+import { AiPanelDialog } from "./ai-panel";
 import { DiffStrip } from "./diff-strip";
 
 function PagesTab({ scan }) {
@@ -76,7 +79,10 @@ export function ReportView({ scan, shared = false }) {
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6">
       <div className="flex items-start justify-between gap-4">
         <ScoreHeader scan={scan} className="flex-1" />
-        <ShareMenu scanId={scan.id} host={new URL(scan.url).host} />
+        <div className="no-print flex shrink-0 items-start gap-2">
+          <AiPanelButton scan={scan} />
+          <ShareMenu scanId={scan.id} host={new URL(scan.url).host} />
+        </div>
       </div>
 
       <DiffStrip diff={scan.diff} />
@@ -116,11 +122,25 @@ export function ReportView({ scan, shared = false }) {
 
       <p className="mt-12 font-mono text-[10px] uppercase tracking-widest text-ink/35">
         {shared ? (
-          <>public report · generated {new Date(scan.createdAt).toLocaleString()} · run your own at critique.app</>
+          <>public report · generated {new Date(scan.createdAt).toLocaleString()} · run your own audit free</>
         ) : (
-          <>scanned {new Date(scan.createdAt).toLocaleString()} · one anonymous scan · sign-in history arrives in phase 5</>
+          <>scanned {new Date(scan.createdAt).toLocaleString()} · free · no tiers · no gate</>
         )}
       </p>
     </div>
+  );
+}
+
+function AiPanelButton({ scan }) {
+  const [open, setOpen] = useState(false);
+  const host = new URL(scan.url).host;
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Ask the AIs
+      </Button>
+      <AiPanelDialog open={open} onOpenChange={setOpen} scanId={scan.id} host={host} />
+    </>
   );
 }

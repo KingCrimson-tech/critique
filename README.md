@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Critique
 
-## Getting Started
+Paste a URL, get a blunt, actionable audit: SEO, performance, accessibility,
+security, content, and AI-readability. Free, no tiers, no gating. Every finding
+ships with a concrete fix. See [`REPORT.md`](./REPORT.md) for what is built, and
+[`/rubric`](http://localhost:3000/rubric) for how scoring works.
 
-First, run the development server:
+## Stack
+
+Next.js 15 (App Router, JavaScript only — no TypeScript) · Tailwind v4 with a
+CSS-first token system · Radix primitives owned and restyled · Prisma + Postgres ·
+Better Auth (magic link) · keyless PageSpeed Insights.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env            # then edit values
+docker run -d --name critique-postgres \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=critique \
+  -p 5432:5432 postgres:16-alpine
+pnpm exec prisma migrate deploy
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Magic links print to the server console (there is no email service by design).
+- PSI runs keyless; when the shared quota is exhausted the report says so and
+  never scores a zero.
+- The "Ask the AIs" panel needs `GROQ_API_KEY` and/or `OPENROUTER_API_KEY`
+  (both have free tiers); without keys it degrades to an honest "no api key".
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Deploy (Vercel + Neon)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Neon project; copy the **pooled** connection string
+   (`...-pooler...neon.tech/critique?sslmode=require`).
+2. Push to GitHub, import the repo in Vercel.
+3. Set environment variables in Vercel (Project → Settings → Environment Variables):
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | Neon pooled connection string |
+   | `AUTH_SECRET` | `openssl rand -hex 32` |
+   | `BETTER_AUTH_URL` | `https://your-domain` |
+   | `GROQ_API_KEY` / `OPENROUTER_API_KEY` | optional, free tiers |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `NEXT_PUBLIC_GOOGLE_ENABLED` | optional |
+4. Run `pnpm exec prisma migrate deploy` against the Neon URL once
+   (`DATABASE_URL=... pnpm exec prisma migrate deploy` from CI or locally).
+5. Deploy. `/robots.txt` and `/rubric` ship with the app.
 
-## Learn More
+Scan route handlers declare `maxDuration = 60`; on Vercel's free Hobby plan
+functions default to enough wall time for the 45s crawl budget.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `pnpm dev` — dev server (Turbopack)
+- `pnpm build` — production build
+- `pnpm lint` — ESLint
+- `pnpm exec prisma migrate dev` — apply schema changes locally

@@ -67,8 +67,21 @@ export default function ComparePage() {
 
   if (!scans)
     return (
-      <div className="mx-auto max-w-6xl px-4 py-16 font-mono text-data text-ink/45 sm:px-6">
-        Loading scans…
+      <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6" aria-busy="true" aria-label="Loading comparison">
+        <div className="h-8 w-56 bg-hairline" />
+        <div className="mt-8 grid gap-px border border-hairline bg-hairline" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-paper p-6">
+              <div className="mx-auto h-16 w-20 bg-hairline" />
+              <div className="mt-3 h-3 w-3/4 bg-hairline" />
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-col gap-3">
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="h-3 w-full bg-hairline" />
+          ))}
+        </div>
       </div>
     );
 

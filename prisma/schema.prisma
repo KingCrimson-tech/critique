@@ -114,3 +114,16 @@ model ShareLink {
 
   scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
 }
+
+// "Ask the AIs" snapshot per host. One row caches every provider/prompt result
+// for 72h; requestedBy keys fresh-probe rate limits (user id or anon token).
+model AiProbe {
+  id          String   @id @default(cuid())
+  host        String   @unique
+  brand       String
+  data        Json
+  requestedBy String
+  createdAt   DateTime @default(now())
+
+  @@index([requestedBy, createdAt])
+}

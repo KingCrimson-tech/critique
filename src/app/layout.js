@@ -25,6 +25,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata = {
+  metadataBase: new URL(process.env.BETTER_AUTH_URL ?? "http://localhost:3000"),
   title: {
     default: "Critique — blunt audits for live websites",
     template: "%s · Critique",
@@ -44,8 +45,14 @@ export default function RootLayout({ children }) {
         className={`${display.variable} ${sans.variable} ${mono.variable} min-h-dvh antialiased`}
       >
         <Providers>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:border focus:border-ink focus:bg-paper focus:px-3 focus:py-2 focus:font-mono focus:text-[12px]"
+          >
+            Skip to content
+          </a>
           <SiteHeader />
-          <main>{children}</main>
+          <main id="main">{children}</main>
           <SiteFooter />
         </Providers>
       </body>

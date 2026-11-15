@@ -26,6 +26,7 @@ export function SiteHeader() {
           {user && (
             <Link
               href="/sites"
+              aria-current={pathname.startsWith("/sites") ? "page" : undefined}
               className={`font-mono text-[11px] uppercase tracking-widest transition-colors ${
                 pathname.startsWith("/sites") ? "text-ink" : "text-ink/55 hover:text-ink"
               }`}

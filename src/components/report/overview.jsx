@@ -3,6 +3,7 @@
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/cn";
 
+
 const BAND = {
   good: "text-green",
   mid: "text-amber",
@@ -15,10 +16,10 @@ function bandClass(score) {
   return BAND.bad;
 }
 
-export function ScoreHeader({ scan }) {
+export function ScoreHeader({ scan, className }) {
   const { score, counts } = scan;
   return (
-    <div className="grid gap-8 border-b border-hairline pb-10 lg:grid-cols-[auto_1fr] lg:gap-16">
+    <div className={cn("grid gap-8 border-b border-hairline pb-10 lg:grid-cols-[auto_1fr] lg:gap-16", className)}>
       <div>
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/55">
           Overall score
@@ -129,7 +130,7 @@ export function CategoryRail({ score }) {
         })}
       </ul>
       <p className="mt-2 border-t border-hairline pt-2 font-mono text-[10px] uppercase tracking-widest text-ink/40">
-        Performance + accessibility join the overall score in Phase 4, when lab data runs.
+        Performance + accessibility score from PageSpeed lab data — a dash means PSI did not answer.
       </p>
     </div>
   );

@@ -1,6 +1,6 @@
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-hairline">
+    <footer className="no-print mt-auto border-t border-hairline">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
         <p className="max-w-md font-mono text-[11px] leading-relaxed text-ink/55">
           Critique — an editorial audit of the web. Scores are penalties, not

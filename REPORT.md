@@ -131,10 +131,50 @@ site instead of faking one.
 live sites including the JS-only SPA; 404 on unknown scan ids; report weight math
 spot-checked by hand against the rubric.
 
+## Phase 4 — Performance, compare, share
+
+The report becomes shareable evidence, and the two missing categories in the rail come
+to life.
+
+**Lab data.** Every scan now runs the PageSpeed Insights API (keyless, mobile) in
+parallel with the crawl — Lighthouse performance and accessibility scores, Core Web
+Vitals (LCP, CLS, TBT, FCP, speed index) with threshold-based verdicts, the failing
+accessibility audits ranked by weight, and CrUX real-user field data when the URL has
+enough traffic. PSI and the crawler answer at different speeds and fail differently, so
+the integration is strictly best-effort: a timeout or a refusal means the report says
+"did not answer in time" and the category shows a dash — never a zero, never a broken
+scan. (In practice the keyless shared quota is frequently exhausted — HTTP 429 — so the
+degraded state is the path most visitors will see until a key is added; the UI treats
+it as honest absence, not error.) The scoring rubric folds both categories into the
+overall when lab data exists and renormalizes when it doesn't; the weighting math is
+verified against hand computation.
+
+**Compare mode.** The report's share menu opens a picker of recent scans (up to three
+total). The comparison view puts the overall numerals side by side with a champion
+call-out ("X leads 4 of 7 categories"), a per-category table with an explicit ▸ winner
+marker per row, and a Core Web Vitals table — dashes where PSI was absent, with a note
+that nothing was scored zero for it.
+
+**Public share pages.** Share → "Copy public link" creates a permanent-style link at
+`/s/[slug]` that renders the full report for a logged-out visitor with no account, plus
+a generated 1200×630 OG card (`/api/og/[slug]`) drawn from the scan: the score numeral
+in its band color, the verdict line, the target host, and the wordmark. Share metadata
+(Open Graph + Twitter card) is wired for embeds.
+
+**Print.** Cmd+P (or Share → Print/Save PDF) produces a clean PDF: site chrome,
+filters, and controls drop out, background stays paper-white, rows don't break across
+pages.
+
+**Verified:** lint and build clean; end-to-end share flow (link → public page → OG
+image render); compare view loads two scans; PSI parser verified against a realistic
+fixture including violation filtering and CrUX normalization; scoring hand-checked both
+with and without lab data. Known constraint of the Phase 3 stopgap: scan and share
+state are process-local, so a server restart clears old ids — persistence is exactly
+what Phase 5 replaces with the database.
+
 ## Coming next
 
-- **Phase 4** — PageSpeed Insights + CrUX (keyless), compare mode, public share pages
-  with OG images, print stylesheet.
-- **Phase 5** — Better Auth, anonymous scan claiming, site history and deltas.
+- **Phase 5** — Better Auth, anonymous scan claiming, site history and deltas, durable
+  persistence for scans and share links.
 - **Phase 6** — the "Ask the AIs" panel, empty/error/rate-limit states, accessibility
   pass, rubric page, deploy.

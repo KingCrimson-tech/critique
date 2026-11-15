@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScoreHeader, CategoryRail, StackPanel, TopCosts } from "./overview";
 import { FindingsTable } from "./findings-table";
+import { LabPanel } from "./lab-panel";
+import { ShareMenu } from "./share-menu";
 
 function PagesTab({ scan }) {
   return (
@@ -68,13 +70,16 @@ function PagesTab({ scan }) {
   );
 }
 
-export function ReportView({ scan }) {
+export function ReportView({ scan, shared = false }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6">
-      <ScoreHeader scan={scan} />
+      <div className="flex items-start justify-between gap-4">
+        <ScoreHeader scan={scan} className="flex-1" />
+        <ShareMenu scanId={scan.id} host={new URL(scan.url).host} />
+      </div>
 
       <Tabs defaultValue="overview" className="mt-8">
-        <TabsList aria-label="Report sections">
+        <TabsList aria-label="Report sections" className="no-print">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="findings">Findings &amp; fixes</TabsTrigger>
           <TabsTrigger value="pages">Pages</TabsTrigger>
@@ -82,7 +87,10 @@ export function ReportView({ scan }) {
 
         <TabsContent value="overview">
           <div className="grid gap-10 pt-2 lg:grid-cols-2">
-            <CategoryRail score={scan.score} />
+            <div className="flex flex-col gap-10">
+              <CategoryRail score={scan.score} />
+              <LabPanel psi={scan.psi} />
+            </div>
             <div className="flex flex-col gap-10">
               <TopCosts findings={scan.findings} />
               <StackPanel findings={scan.findings} />
@@ -104,8 +112,11 @@ export function ReportView({ scan }) {
       </Tabs>
 
       <p className="mt-12 font-mono text-[10px] uppercase tracking-widest text-ink/35">
-        scanned {new Date(scan.createdAt).toLocaleString()} · one anonymous scan, saved locally ·
-        sign-in history arrives in phase 5
+        {shared ? (
+          <>public report · generated {new Date(scan.createdAt).toLocaleString()} · run your own at critique.app</>
+        ) : (
+          <>scanned {new Date(scan.createdAt).toLocaleString()} · one anonymous scan · sign-in history arrives in phase 5</>
+        )}
       </p>
     </div>
   );

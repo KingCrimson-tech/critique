@@ -48,8 +48,21 @@ export function computeScore(findings, psi = null) {
   let deductedTotal = 0;
 
   for (const [category, weight] of Object.entries(WEIGHTS)) {
-    if (PENDING_UNTIL_PSI.includes(category) && !psi) {
-      categories[category] = { score: null, pending: true, weight, deducted: 0, findings: 0 };
+    if (PENDING_UNTIL_PSI.includes(category)) {
+      const psiScore =
+        psi?.ok &&
+        (category === "performance" ? psi.scores.performance : psi.scores.accessibility);
+      if (typeof psiScore === "number") {
+        categories[category] = {
+          score: psiScore,
+          pending: false,
+          weight,
+          deducted: 0,
+          findings: category === "accessibility" ? (psi.violations?.length ?? 0) : 0,
+        };
+      } else {
+        categories[category] = { score: null, pending: true, weight, deducted: 0, findings: 0 };
+      }
       continue;
     }
     const own = findings.filter((f) => f.category === category && f.severity !== "info");

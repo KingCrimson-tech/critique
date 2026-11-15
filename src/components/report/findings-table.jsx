@@ -41,7 +41,7 @@ export function FindingsTable({ findings }) {
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
       <div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="no-print flex flex-wrap items-center gap-3">
           <ToggleGroup
             type="single"
             value={severity}
@@ -82,7 +82,7 @@ export function FindingsTable({ findings }) {
       </div>
 
       {/* ranked fix queue — impact order, cheapest first */}
-      <aside>
+      <aside className="no-print">
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/55">
           Fix queue
         </p>

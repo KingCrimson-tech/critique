@@ -156,3 +156,33 @@
 .token.boolean {
   color: #d8b675;
 }
+
+/* ------------------------------------------------------------------
+   Print — Cmd+P produces a clean PDF: no chrome, no controls.
+   ------------------------------------------------------------------ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  main {
+    padding: 0 !important;
+  }
+  main > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  pre,
+  table,
+  li,
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+  a {
+    text-decoration: none;
+    color: var(--ink);
+  }
+}

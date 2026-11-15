@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Input, Tooltip, useToast } from "@/components/ui";
 
 const CATEGORIES = [
@@ -45,11 +46,13 @@ const URL_PATTERN = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}([/?#].*)?$/i;
 
 export default function LandingPage() {
   const toast = useToast();
+  const router = useRouter();
   const [url, setUrl] = useState("");
+  const [running, setRunning] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event, override) {
     event.preventDefault();
-    const value = url.trim();
+    const value = (override ?? url).trim();
     if (!URL_PATTERN.test(value)) {
       toast({
         title: "That is not a URL.",
@@ -57,17 +60,34 @@ export default function LandingPage() {
       });
       return;
     }
-    toast({
-      title: "The crawler lands in Phase 2.",
-      description: "This form is structural for now. Engine first, then findings.",
-    });
+    setRunning(true);
+    try {
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: value }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast({
+          title: "Scan failed.",
+          description: json.error ?? `The engine returned HTTP ${res.status}.`,
+        });
+        return;
+      }
+      router.push(`/scan/${json.id}`);
+    } catch {
+      toast({
+        title: "Scan failed.",
+        description: "The engine did not answer. Try again.",
+      });
+    } finally {
+      setRunning(false);
+    }
   }
 
   function handleSample() {
-    toast({
-      title: "The sample report ships with the scoring engine.",
-      description: "Phase 3 gives every finding a fix and a price.",
-    });
+    handleSubmit({ preventDefault() {} }, "example.com");
   }
 
   return (
@@ -103,8 +123,8 @@ export default function LandingPage() {
             value={url}
             onChange={(event) => setUrl(event.target.value)}
           />
-          <Button type="submit" variant="accent" size="lg" className="sm:w-44">
-            Run the audit
+          <Button type="submit" variant="accent" size="lg" className="sm:w-44" disabled={running}>
+            {running ? "Running the audit…" : "Run the audit"}
           </Button>
         </form>
         <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-ink/50">

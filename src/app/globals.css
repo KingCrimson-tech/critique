@@ -116,3 +116,43 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ------------------------------------------------------------------
+   Prism token colors — vermillion structure, amber values, green strings.
+   ------------------------------------------------------------------ */
+
+.token.tag,
+.token.keyword,
+.token.selector,
+.token.important,
+.token.rule {
+  color: #ff6a4d;
+}
+.token.attr-name,
+.token.class-name,
+.token.function,
+.token.property,
+.token.constant {
+  color: #e8a04c;
+}
+.token.string,
+.token.attr-value,
+.token.char,
+.token.regex {
+  color: #6fc49a;
+}
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: color-mix(in srgb, var(--paper) 45%, transparent);
+  font-style: italic;
+}
+.token.punctuation,
+.token.operator {
+  color: color-mix(in srgb, var(--paper) 65%, transparent);
+}
+.token.number,
+.token.boolean {
+  color: #d8b675;
+}

@@ -83,11 +83,56 @@ sane, non-crashing findings well inside the time budget (0.8s–12.6s). Page cap
 at 15; stack detection correctly identified Next.js/Vercel, WordPress, and
 Shopify/Cloudflare on their respective targets.
 
+## Phase 3 — Scoring, fixes, report UI
+
+Every scan now ends in a number and every finding ends in a fix.
+
+**Scoring.** Category scores are pure penalties: start at 100, subtract 25 for a
+critical, 12 for a high, 5 for a medium, 2 for a low. Overall score is the weighted
+average — SEO .25, Performance .20, Accessibility .15, AI-readability .15, Security .10,
+Content .10, UX .05 — with the score version recorded on every scan so future rubric
+changes never compare apples to old oranges. Performance and Accessibility score from
+PageSpeed lab data in Phase 4; until then they show as pending in the rail and their
+weight redistributes across the categories that did run. The overall score carries a
+blunt verdict line (five bands from "Ship-ready" to "Structurally broken") instead of
+adjectives like "needs improvement".
+
+**Fixes.** Every check id maps to a hand-written fix template: what to do, why it costs
+you, and a real snippet — with per-variant tabs (HTML / Next.js / WordPress / nginx /
+PHP) wherever the same fix genuinely differs by stack. Security header fixes ship as
+both nginx config and `next.config.mjs` headers; sitemap fixes as both `app/sitemap.js`
+and a Yoast walkthrough. Code blocks render with Prism syntax highlighting and a
+copy-to-clipboard button. Informational findings (stack, crashed checks) deliberately
+have no fix — there is nothing to fix.
+
+**Persistence (stopgap).** Scans get stable IDs and are served from an in-process store
+capped at the last 50, exposed through `GET /api/scan/[id]` for polling. Reports live at
+`/scan/[id]`. The store interface is exactly what Phase 5 swaps to the database —
+nothing else changes.
+
+**The report.** `/scan/[id]` opens on an oversized serif score numeral over a thin
+progress rule, the verdict, and the scan's vital stats, then three tabs:
+
+- **Overview** — the category rail (one thin rule per category, scored bands colored
+  green/amber/vermillion, pending rows shown as an honest dash), the three biggest
+  point deductions, and the detected stack.
+- **Findings & fixes** — every finding as an expandable row: severity as a mono tag,
+  blunt one-liner verdict, evidence URL, raw detail on request, and the fix inline.
+  Severity and scope filters (all/sitewide/page) as segmented toggles, plus a ranked
+  fix queue in the margin ordered by penalty.
+- **Pages** — the crawl itself: status, depth, response time, word count and title per
+  page, plus robots/sitemap/error stats.
+
+The landing form is live: submit runs a real scan and routes to the finished report;
+errors surface as blunt toasts. The "sample report" link runs a real scan of a small
+site instead of faking one.
+
+**Verified:** lint and build clean; full round trips (scan → id → report) against four
+live sites including the JS-only SPA; 404 on unknown scan ids; report weight math
+spot-checked by hand against the rubric.
+
 ## Coming next
 
-- **Phase 3** — scoring rubric, hand-written fix templates per finding, and the report UI
-  (oversized score numeral, category rail, severity filters, expandable rows, fix panels
-  with HTML/Next/WordPress variants).
 - **Phase 4** — PageSpeed Insights + CrUX (keyless), compare mode, public share pages
   with OG images, print stylesheet.
 - **Phase 5** — Better Auth, anonymous scan claiming, site history and deltas.

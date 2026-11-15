@@ -1,0 +1,46 @@
+/* ------------------------------------------------------------------
+   Critique design tokens.
+   Ink on paper. Hard rules. Two colors per screen, max.
+   ------------------------------------------------------------------ */
+
+:root {
+  /* palette */
+  --ink: #0b0b0c;
+  --paper: #f4f1ea;
+  --vermillion: #d93a1f;
+  --amber: #b26a00;
+  --green: #1e6b4e;
+
+  /* hairlines — the only "borders" in the system */
+  --hairline: color-mix(in srgb, var(--ink) 14%, transparent);
+  --hairline-strong: color-mix(in srgb, var(--ink) 55%, transparent);
+
+  /* type scale (fluid) */
+  --text-hero: clamp(3.25rem, 9vw, 7rem);
+  --text-display: clamp(2.25rem, 5vw, 3.5rem);
+  --text-headline: clamp(1.375rem, 2.5vw, 1.75rem);
+  --text-body: 1rem;
+  --text-data: 0.8125rem;
+
+  /* spacing — 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* radii — 0 to 4, nothing rounder */
+  --radius-0: 0px;
+  --radius-1: 2px;
+  --radius-2: 4px;
+
+  /* motion — Radix data-state transitions only */
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}

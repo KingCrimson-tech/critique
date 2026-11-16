@@ -30,8 +30,9 @@ export function LabPanel({ psi }) {
           Lab data
         </p>
         <p className="mt-3 border border-hairline p-4 text-[13px] leading-relaxed text-ink/60">
-          PageSpeed Insights did not answer in time, so no lab or field data this round.
-          The scores above stand on crawler evidence alone — re-scan later for the full picture.
+          PageSpeed Insights did not answer this round
+          {psi?.reason ? <> — {psi.reason}</> : " in time"}. The scores above stand on
+          crawler evidence alone — re-scan later for the full picture.
         </p>
       </div>
     );

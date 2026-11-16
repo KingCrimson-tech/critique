@@ -1,7 +1,8 @@
-// PageSpeed Insights + CrUX, keyless.
-// PSI runs Lighthouse (mobile) for us; CrUX field data comes back in the same
-// response when the URL has enough real-user traffic. Everything is best-effort:
-// any failure degrades to null and the report says so honestly.
+// PageSpeed Insights + CrUX. Runs with a PSI_API_KEY when one is configured,
+// keyless otherwise (shared quota, often 429s). PSI runs Lighthouse (mobile)
+// for us; CrUX field data comes back in the same response when the URL has
+// enough real-user traffic. Everything is best-effort: a failure returns
+// { ok: false, reason } and the report says so honestly — never a zero.
 
 const PSI_TIMEOUT_MS = 28_000;
 
@@ -37,13 +38,23 @@ export async function runPsi(url, timeoutMs = PSI_TIMEOUT_MS) {
   const target = String(url);
   const endpoint =
     `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(target)}` +
-    `&strategy=mobile&category=performance&category=accessibility`;
+    `&strategy=mobile&category=performance&category=accessibility` +
+    (process.env.PSI_API_KEY ? `&key=${process.env.PSI_API_KEY}` : "");
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(endpoint, { signal: controller.signal });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Human-readable reason so the report can say exactly what happened.
+      const known = {
+        429: "quota exhausted (shared keyless quota, or key limit reached)",
+        403: "key rejected — check the key is enabled for PageSpeed Insights API",
+        400: "request refused — the URL may be unreachable or malformed",
+        500: "Google-side failure",
+      };
+      return { ok: false, reason: known[res.status] ?? `HTTP ${res.status}` };
+    }
     const data = await res.json();
 
     const lh = data.lighthouseResult;
@@ -110,14 +121,15 @@ export async function runPsi(url, timeoutMs = PSI_TIMEOUT_MS) {
     return {
       ok: true,
       device: "mobile",
+      keyed: Boolean(process.env.PSI_API_KEY),
       scores,
       metrics,
       violations,
       field,
       fetchedAt: new Date().toISOString(),
     };
-  } catch {
-    return null;
+  } catch (error) {
+    return { ok: false, reason: error?.name === "AbortError" ? "timed out before Lighthouse finished" : "unreachable" };
   } finally {
     clearTimeout(timer);
   }

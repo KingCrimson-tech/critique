@@ -40,6 +40,7 @@ pnpm dev
    | `DATABASE_URL` | Neon pooled connection string |
    | `AUTH_SECRET` | `openssl rand -hex 32` |
    | `BETTER_AUTH_URL` | `https://your-domain` |
+   | `PSI_API_KEY` | recommended — your own PageSpeed quota |
    | `GROQ_API_KEY` / `OPENROUTER_API_KEY` | optional, free tiers |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `NEXT_PUBLIC_GOOGLE_ENABLED` | optional |
 4. Run `pnpm exec prisma migrate deploy` against the Neon URL once

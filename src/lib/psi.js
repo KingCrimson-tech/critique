@@ -4,7 +4,9 @@
 // enough real-user traffic. Everything is best-effort: a failure returns
 // { ok: false, reason } and the report says so honestly — never a zero.
 
-const PSI_TIMEOUT_MS = 28_000;
+// Big sites take 50s+ of Lighthouse time (vercel.com measured 53s). 55s fits
+// inside the scan route's maxDuration = 60 on Vercel with margin.
+const PSI_TIMEOUT_MS = 55_000;
 
 function num(value, digits = 0) {
   if (value === null || value === undefined) return null;
@@ -46,14 +48,17 @@ export async function runPsi(url, timeoutMs = PSI_TIMEOUT_MS) {
   try {
     const res = await fetch(endpoint, { signal: controller.signal });
     if (!res.ok) {
-      // Human-readable reason so the report can say exactly what happened.
-      const known = {
-        429: "quota exhausted (shared keyless quota, or key limit reached)",
-        403: "key rejected — check the key is enabled for PageSpeed Insights API",
-        400: "request refused — the URL may be unreachable or malformed",
-        500: "Google-side failure",
-      };
-      return { ok: false, reason: known[res.status] ?? `HTTP ${res.status}` };
+      // Parse Google's error body — "API key not valid" vs quota vs the URL
+      // itself are different problems and the report should say which.
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        const message = body?.error?.message ?? body?.error?.errors?.[0]?.message;
+        if (message) detail = message.slice(0, 160);
+      } catch {
+        /* body wasn't JSON — keep the status line */
+      }
+      return { ok: false, reason: detail };
     }
     const data = await res.json();
 

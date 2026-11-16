@@ -5,7 +5,7 @@
 import { prisma } from "./db";
 import { computeScore } from "./score";
 import { runChecks } from "./checks";
-import { crawl, summarizePages } from "./crawler";
+import { crawl, summarizePages, normalizeUrl } from "./crawler";
 import { runPsi } from "./psi";
 import { ANON_COOKIE, verifyAnonToken, anonTokenFromRequest } from "./anon";
 import { createHash } from "node:crypto";
@@ -18,7 +18,10 @@ async function resolveSite(userId, origin) {
 }
 
 export async function runAndSaveScan(url, { userId, anonToken } = {}) {
-  const [result, psi] = await Promise.all([crawl(url), runPsi(url).catch(() => null)]);
+  // PSI gets the normalized URL too — a bare "example.com" (scheme-less input)
+  // is a 400 from Google otherwise, while the crawler normalizes on its own.
+  const normalized = normalizeUrl(url);
+  const [result, psi] = await Promise.all([crawl(normalized), runPsi(normalized).catch(() => null)]);
   if (!result.homepage) {
     const error = new Error(
       "Could not fetch the site. It refused the connection, timed out, or does not resolve.",
@@ -61,11 +64,12 @@ export async function runAndSaveScan(url, { userId, anonToken } = {}) {
       psi,
       diff,
       anonToken: userId ? null : anonToken,
+      elapsedMs: result.stats.elapsedMs,
     },
     include: { site: true, shareLinks: true },
   });
 
-  return serializeScan(created);
+  return serializeScan(created, result);
 }
 
 function computeDiff(previous, next) {
@@ -93,7 +97,16 @@ function computeDiff(previous, next) {
   };
 }
 
-function serializeScan(scan) {
+function serializeScan(scan, crawlResult = null) {
+  // Wall-clock scan time from the crawler when available (a fresh scan);
+  // for stored scans without it, the page-response sum is the honest fallback.
+  const stats = crawlResult
+    ? { ...crawlResult.stats, fetched: crawlResult.stats.fetched, failed: crawlResult.stats.failed }
+    : {
+        elapsedMs: (scan.pages ?? []).reduce((sum, p) => sum + (p.ms ?? 0), 0) || null,
+        fetched: (scan.pages ?? []).length,
+        failed: 0,
+      };
   return {
     id: scan.id,
     createdAt: scan.createdAt.toISOString(),
@@ -108,11 +121,7 @@ function serializeScan(scan) {
     pages: scan.pages ?? [],
     psi: scan.psi,
     diff: scan.diff,
-    stats: {
-      elapsedMs: (scan.pages ?? []).reduce((sum, p) => sum + (p.ms ?? 0), 0) || null,
-      fetched: (scan.pages ?? []).length,
-      failed: 0,
-    },
+    stats,
     sitemapUrls: [],
     robotsStatus: null,
     errors: [],

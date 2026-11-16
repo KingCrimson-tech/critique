@@ -96,6 +96,7 @@ model Scan {
   psi          Json?
   diff         Json?
   anonToken    String?
+  elapsedMs    Int?
   error        String?
   createdAt    DateTime @default(now())
 
